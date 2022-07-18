@@ -85,6 +85,17 @@ pub fn create_environment(
     envs: Vec<&str>
 ) -> Result<Environment> {
     let environment = Environment::from_envs(envs)?;
+    if app.includes_file(".env") {
+        let procfile: HashMap<String, String> =
+            app.read_yaml(".env").context("Reading Procfile")?;
+        if let Some(release) = procfile.get("release") {
+            Ok(Some(release.to_string()))
+        } else {
+            Ok(None)
+        }
+    } else {
+        Ok(None)
+    }
 
     return Ok(environment);
 }
