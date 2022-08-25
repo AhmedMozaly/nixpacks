@@ -131,7 +131,7 @@ impl DockerImageBuilder {
         docker_build_cmd
             .arg("run")
             .arg("-v")
-            .arg("$HOME/.config/gcloud:/root/.config/gcloud")
+            .arg("/root/.config/gcloud:/root/.config/gcloud")
             .arg("-v")
             .arg(format!("{}:/workspace", context_dir))
             .arg("gcr.io/kaniko-project/executor:latest")
