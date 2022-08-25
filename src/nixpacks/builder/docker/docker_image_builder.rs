@@ -79,6 +79,7 @@ impl DockerImageBuilder {
     }
 
     fn run_daemonless(&self, plan: &BuildPlan, output: &OutputDir, name: &str) -> Result<Command> {
+        println!("Building with Buildkit in Daemonless mode");
         let mut docker_build_cmd = Command::new("docker");
 
         if docker_build_cmd.output().is_err() {
@@ -117,6 +118,7 @@ impl DockerImageBuilder {
     }
 
     fn run_kaniko(&self, plan: &BuildPlan, output: &OutputDir, name: &str) -> Result<Command> {
+        println!("Building with  Kaniko");
         let mut docker_build_cmd = Command::new("docker");
 
         if docker_build_cmd.output().is_err() {
@@ -124,6 +126,7 @@ impl DockerImageBuilder {
         }
 
         let context_dir = &output.root.display().to_string();
+        let cache_dir = "/builder-files/kaniko-cache";
 
         docker_build_cmd
             .arg("run")
@@ -136,6 +139,10 @@ impl DockerImageBuilder {
             .arg("/workspace/.nixpacks/Dockerfile")
             .arg("--destination")
             .arg(format!("gcr.io/railway-infra-staging/{}", name.to_string()))
+            .arg("--cache=true")
+            .arg(format!("--cache-dir={}", cache_dir))
+            .arg("--cache-copy-layers")
+            .arg("--cache-run-layers")
             .arg("--context")
             .arg(context_dir);
 
@@ -143,6 +150,7 @@ impl DockerImageBuilder {
     }
 
     fn run_docker(&self, plan: &BuildPlan, output: &OutputDir, name: &str) -> Result<Command> {
+        println!("Building with Buildkit");
         let mut docker_build_cmd = Command::new("docker");
 
         if docker_build_cmd.output().is_err() {
