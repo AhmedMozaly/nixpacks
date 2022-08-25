@@ -7,7 +7,7 @@ use anyhow::{bail, Context, Ok, Result};
 
 use std::{
     fs::{self, File},
-    process::Command,
+    process::Command, fmt::format,
 };
 use tempdir::TempDir;
 use uuid::Uuid;
@@ -89,16 +89,43 @@ impl DockerImageBuilder {
             bail!("Please install Docker to build the app https://docs.docker.com/engine/install/")
         }
 
-        // Enable BuildKit for all builds
-        docker_build_cmd.env("DOCKER_BUILDKIT", "1");
+
+        let target_dir = "/build-dir";
+        let layers_cache_dir = "//Users/ahmedmozaly/mozaly-cache/";
 
         docker_build_cmd
-            .arg("build")
-            .arg(&output.root)
-            .arg("-f")
-            .arg(&output.get_absolute_path("Dockerfile"))
-            .arg("-t")
-            .arg(name);
+        .arg("run")
+        .arg("-it")
+        .arg("--privileged")
+        .arg("-v")
+        .arg(format!("{}:{}/", &output.root.display().to_string(), target_dir))
+        .arg("-v")
+        .arg(format!("{}:/cache-dir", layers_cache_dir))
+        .arg("--entrypoint")
+        .arg("buildctl-daemonless.sh")
+        .arg("moby/buildkit:master")
+        .arg("build")
+        .arg("--frontend")
+        .arg("dockerfile.v0")
+        .arg("--local")
+        .arg(format!("context={}",target_dir))
+        .arg("--local")
+        .arg(format!("dockerfile={}/.nixpacks", target_dir))
+        .arg("--output")
+        .arg(format!("type=oci,dest=/{}/.nixpacks/{}.tar", target_dir, name))
+        .arg("--export-cache")
+        .arg("type=local,dest=/cache-dir,mode=max");
+
+        // Enable BuildKit for all builds
+        // docker_build_cmd.env("DOCKER_BUILDKIT", "1");
+
+        // docker_build_cmd
+        //     .arg("build")
+        //     .arg(&output.root)
+        //     .arg("-f")
+        //     .arg(&output.get_absolute_path("Dockerfile"))
+        //     .arg("-t")
+        //     .arg(name);
 
         if self.options.quiet {
             docker_build_cmd.arg("--quiet");
