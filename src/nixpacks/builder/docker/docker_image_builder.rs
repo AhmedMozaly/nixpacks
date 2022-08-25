@@ -87,7 +87,7 @@ impl DockerImageBuilder {
         }
 
         let target_dir = "/build-dir";
-        let layers_cache_dir = "//Users/ahmedmozaly/mozaly-cache/";
+        let cache_dir = "/builder-files/buildkit-daemonless-cache";
 
         docker_build_cmd
         .arg("run")
@@ -96,7 +96,7 @@ impl DockerImageBuilder {
         .arg("-v")
         .arg(format!("{}:{}/", &output.root.display().to_string(), target_dir))
         .arg("-v")
-        .arg(format!("{}:/cache-dir", layers_cache_dir))
+        .arg(format!("{}:/cache-dir", cache_dir))
         .arg("--entrypoint")
         .arg("buildctl-daemonless.sh")
         .arg("moby/buildkit:master")
@@ -127,11 +127,12 @@ impl DockerImageBuilder {
 
         let context_dir = &output.root.display().to_string();
         let cache_dir = "/builder-files/kaniko-cache";
+        let gcloud_idr = "/root";
 
         docker_build_cmd
             .arg("run")
             .arg("-v")
-            .arg("/root/.config/gcloud:/root/.config/gcloud")
+            .arg(format!("{}/.config/gcloud:/root/.config/gcloud", gcloud_idr))
             .arg("-v")
             .arg(format!("{}:/workspace", context_dir))
             .arg("gcr.io/kaniko-project/executor:latest")
@@ -203,7 +204,7 @@ impl DockerImageBuilder {
         name: &str,
         output: &OutputDir,
     ) -> Result<Command> {
-        self.run_kaniko(plan, output, name)
+        self.run_daemonless(plan, output, name)
     }
 
     fn write_app(&self, app_src: &str, output: &OutputDir) -> Result<()> {
