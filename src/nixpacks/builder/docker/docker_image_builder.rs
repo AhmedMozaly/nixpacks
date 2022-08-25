@@ -6,8 +6,9 @@ use crate::nixpacks::{
 use anyhow::{bail, Context, Ok, Result};
 
 use std::{
+    fmt::format,
     fs::{self, File},
-    process::Command, fmt::format,
+    process::Command,
 };
 use tempdir::TempDir;
 use uuid::Uuid;
@@ -77,18 +78,12 @@ impl DockerImageBuilder {
         DockerImageBuilder { logger, options }
     }
 
-    fn get_docker_build_cmd(
-        &self,
-        plan: &BuildPlan,
-        name: &str,
-        output: &OutputDir,
-    ) -> Result<Command> {
+    fn run_daemonless(&self, plan: &BuildPlan, output: &OutputDir, name: &str) -> Result<Command> {
         let mut docker_build_cmd = Command::new("docker");
 
         if docker_build_cmd.output().is_err() {
             bail!("Please install Docker to build the app https://docs.docker.com/engine/install/")
         }
-
 
         let target_dir = "/build-dir";
         let layers_cache_dir = "//Users/ahmedmozaly/mozaly-cache/";
@@ -111,21 +106,59 @@ impl DockerImageBuilder {
         .arg(format!("context={}",target_dir))
         .arg("--local")
         .arg(format!("dockerfile={}/.nixpacks", target_dir))
+        .arg("--import-cache")
+        .arg("type=local,src=/cache-dir")
         .arg("--output")
-        .arg(format!("type=oci,dest=/{}/.nixpacks/{}.tar", target_dir, name))
+        .arg(format!("type=image,name=us-west1-docker.pkg.dev/railway-infra-dev/railway-docker-internal-dev/{}", name))
         .arg("--export-cache")
         .arg("type=local,dest=/cache-dir,mode=max");
 
-        // Enable BuildKit for all builds
-        // docker_build_cmd.env("DOCKER_BUILDKIT", "1");
+        Ok(docker_build_cmd)
+    }
 
-        // docker_build_cmd
-        //     .arg("build")
-        //     .arg(&output.root)
-        //     .arg("-f")
-        //     .arg(&output.get_absolute_path("Dockerfile"))
-        //     .arg("-t")
-        //     .arg(name);
+    fn run_kaniko(&self, plan: &BuildPlan, output: &OutputDir, name: &str) -> Result<Command> {
+        let mut docker_build_cmd = Command::new("docker");
+
+        if docker_build_cmd.output().is_err() {
+            bail!("Please install Docker to build the app https://docs.docker.com/engine/install/")
+        }
+
+        let context_dir = &output.root.display().to_string();
+
+        docker_build_cmd
+            .arg("run")
+            .arg("-v")
+            .arg("$HOME/.config/gcloud:/root/.config/gcloud")
+            .arg("-v")
+            .arg(format!("{}:/workspace", context_dir))
+            .arg("gcr.io/kaniko-project/executor:latest")
+            .arg("--dockerfile")
+            .arg("/workspace/.nixpacks/Dockerfile")
+            .arg("--destination")
+            .arg(format!("gcr.io/railway-infra-staging/{}", name.to_string()))
+            .arg("--context")
+            .arg(context_dir);
+
+        Ok(docker_build_cmd)
+    }
+
+    fn run_docker(&self, plan: &BuildPlan, output: &OutputDir, name: &str) -> Result<Command> {
+        let mut docker_build_cmd = Command::new("docker");
+
+        if docker_build_cmd.output().is_err() {
+            bail!("Please install Docker to build the app https://docs.docker.com/engine/install/")
+        }
+
+        // Enable BuildKit for all buildsddd
+        docker_build_cmd.env("DOCKER_BUILDKIT", "1");
+
+        docker_build_cmd
+            .arg("build")
+            .arg(&output.root)
+            .arg("-f")
+            .arg(&output.get_absolute_path("Dockerfile"))
+            .arg("-t")
+            .arg(name);
 
         if self.options.quiet {
             docker_build_cmd.arg("--quiet");
@@ -154,6 +187,15 @@ impl DockerImageBuilder {
         }
 
         Ok(docker_build_cmd)
+    }
+
+    fn get_docker_build_cmd(
+        &self,
+        plan: &BuildPlan,
+        name: &str,
+        output: &OutputDir,
+    ) -> Result<Command> {
+        self.run_kaniko(plan, output, name)
     }
 
     fn write_app(&self, app_src: &str, output: &OutputDir) -> Result<()> {
