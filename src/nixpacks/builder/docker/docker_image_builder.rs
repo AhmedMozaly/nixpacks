@@ -87,7 +87,7 @@ impl DockerImageBuilder {
         }
 
         let target_dir = "/build-dir";
-        let cache_dir = "/builder-files/buildkit-daemonless-cache";
+        let cache_dir = "/builder-files/buildkit-daemonless-cache2";
 
         docker_build_cmd
         .arg("run")
