@@ -201,6 +201,8 @@ fn main() -> Result<()> {
             let out_dir = matches.value_of("out").map(ToString::to_string);
             let mut cache_key = matches.value_of("cache-key").map(ToString::to_string);
             let no_cache = matches.is_present("no-cache");
+            let cache_from = matches.value_of("cache_from").map(ToString::to_string);
+            let cache_to = matches.value_of("cache_to").map(ToString::to_string);
 
             // Default to absolute `path` of the source that is being built as the cache-key if not disabled
             if !no_cache && cache_key.is_none() {
@@ -233,6 +235,8 @@ fn main() -> Result<()> {
                 no_cache,
                 platform,
                 print_dockerfile,
+                cache_from,
+                cache_to,
             };
 
             create_docker_image(path, envs, plan_options, build_options)?;

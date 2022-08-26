@@ -11,6 +11,8 @@ pub struct DockerBuilderOptions {
     pub cache_key: Option<String>,
     pub no_cache: bool,
     pub platform: Vec<String>,
+    pub cache_from: Option<String>,
+    pub cache_to: Option<String>,
 }
 
 mod cache;
