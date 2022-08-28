@@ -108,10 +108,17 @@ impl DockerImageBuilder {
             docker_build_cmd.arg("--no-cache");
         }
 
+        if self.options.inline_caching {
+            println!("inline caching enabled");
+            docker_build_cmd.env("BUILDKIT_INLINE_CACHE", "1");
+        }
+
         if self.options.cache_from.is_some() {
+            let cache_from = self.options.cache_from.clone().unwrap();
+            println!("cache from {}", &cache_from);
             docker_build_cmd
                 .arg("--cache-from")
-                .arg(self.options.cache_from.clone().unwrap());
+                .arg(&cache_from);
         }
 
         if self.options.cache_to.is_some() {

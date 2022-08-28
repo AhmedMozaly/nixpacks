@@ -82,6 +82,29 @@ fn main() -> Result<()> {
                         .takes_value(true),
                 )
                 .arg(
+                    Arg::new("cache-from")
+                        .long("cache-from")
+                        .help(
+                            "Image to get cache from",
+                        )
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::new("inline-caching")
+                        .long("inline-caching")
+                        .help(
+                            "Inline cache into image",
+                        )
+                )
+                .arg(
+                    Arg::new("cache-to")
+                        .long("cache-to")
+                        .help(
+                            "Image to set cache to",
+                        )
+                        .takes_value(true),
+                )
+                .arg(
                     Arg::new("no-cache")
                         .long("no-cache")
                         .help("Disable building with the cache"),
@@ -201,8 +224,9 @@ fn main() -> Result<()> {
             let out_dir = matches.value_of("out").map(ToString::to_string);
             let mut cache_key = matches.value_of("cache-key").map(ToString::to_string);
             let no_cache = matches.is_present("no-cache");
-            let cache_from = matches.value_of("cache_from").map(ToString::to_string);
-            let cache_to = matches.value_of("cache_to").map(ToString::to_string);
+            let inline_caching = matches.is_present("inline-caching");
+            let cache_from = matches.value_of("cache-from").map(ToString::to_string);
+            let cache_to = matches.value_of("cache-to").map(ToString::to_string);
 
             // Default to absolute `path` of the source that is being built as the cache-key if not disabled
             if !no_cache && cache_key.is_none() {
@@ -237,6 +261,7 @@ fn main() -> Result<()> {
                 print_dockerfile,
                 cache_from,
                 cache_to,
+                inline_caching,
             };
 
             create_docker_image(path, envs, plan_options, build_options)?;

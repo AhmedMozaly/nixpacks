@@ -13,6 +13,7 @@ pub struct DockerBuilderOptions {
     pub platform: Vec<String>,
     pub cache_from: Option<String>,
     pub cache_to: Option<String>,
+    pub inline_caching: bool,
 }
 
 mod cache;
