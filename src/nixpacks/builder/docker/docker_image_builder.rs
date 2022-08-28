@@ -126,18 +126,24 @@ impl DockerImageBuilder {
         }
 
         let context_dir = &output.root.display().to_string();
+        println!("Context dir: {}", context_dir);
+
         let cache_dir = "/builder-files/kaniko-cache";
-        let gcloud_idr = "/root";
+        let gcloud_idr = "/Users/ahmedmozaly";
+        let container_root_dir = "/workspace";
 
         docker_build_cmd
             .arg("run")
             .arg("-v")
-            .arg(format!("{}/.config/gcloud:/root/.config/gcloud", gcloud_idr))
+            .arg(format!(
+                "{}/.config/gcloud:/root/.config/gcloud",
+                gcloud_idr
+            ))
             .arg("-v")
-            .arg(format!("{}:/workspace", context_dir))
+            .arg(format!("{}:{}", context_dir, container_root_dir))
             .arg("gcr.io/kaniko-project/executor:latest")
             .arg("--dockerfile")
-            .arg("/workspace/.nixpacks/Dockerfile")
+            .arg(format!("{}/.nixpacks/Dockerfile", container_root_dir))
             .arg("--destination")
             .arg(format!("gcr.io/railway-infra-staging/{}", name.to_string()))
             .arg("--cache=true")
@@ -145,7 +151,7 @@ impl DockerImageBuilder {
             .arg("--cache-copy-layers")
             .arg("--cache-run-layers")
             .arg("--context")
-            .arg(context_dir);
+            .arg(container_root_dir);
 
         Ok(docker_build_cmd)
     }
@@ -160,6 +166,7 @@ impl DockerImageBuilder {
 
         // Enable BuildKit for all buildsddd
         docker_build_cmd.env("DOCKER_BUILDKIT", "1");
+        println!("output dir {}", &output.root.display().to_string());
 
         docker_build_cmd
             .arg("build")
@@ -204,7 +211,7 @@ impl DockerImageBuilder {
         name: &str,
         output: &OutputDir,
     ) -> Result<Command> {
-        self.run_daemonless(plan, output, name)
+        self.run_kaniko(plan, output, name)
     }
 
     fn write_app(&self, app_src: &str, output: &OutputDir) -> Result<()> {
