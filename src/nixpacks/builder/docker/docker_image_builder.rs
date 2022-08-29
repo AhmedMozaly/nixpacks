@@ -141,7 +141,7 @@ impl DockerImageBuilder {
             .arg("-v")
             .arg(format!("{}:/root/.config/gcloud", gcloud_idr))
             .arg("-v")
-            .arg(format!("{}:/workspace", context_dir))
+            .arg(format!("{}:{}", context_dir, container_build_dir))
             .arg("gcr.io/kaniko-project/executor:latest")
             .arg("--dockerfile")
             .arg(format!("{}/.nixpacks/Dockerfile", container_build_dir))
@@ -167,6 +167,7 @@ impl DockerImageBuilder {
 
         // Enable BuildKit for all buildsddd
         docker_build_cmd.env("DOCKER_BUILDKIT", "1");
+        println!("output dir {}", &output.root.display().to_string());
 
         docker_build_cmd
             .arg("build")

@@ -84,9 +84,7 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::new("nix-proxy")
                         .long("nix-proxy")
-                        .help(
-                            "URL of nix cache proxy, Defaults to none",
-                        )
+                        .help("URL of nix cache proxy, Defaults to none")
                         .takes_value(true),
                 )
                 .arg(

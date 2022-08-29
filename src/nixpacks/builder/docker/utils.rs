@@ -95,7 +95,12 @@ mod tests {
             get_copy_from_command(from, &[], app_dir)
         );
         assert_eq!(
-            format!("COPY --link --from={} {} {}", from, files.join(" "), app_dir),
+            format!(
+                "COPY --link --from={} {} {}",
+                from,
+                files.join(" "),
+                app_dir
+            ),
             get_copy_from_command(from, &files, app_dir)
         );
     }
