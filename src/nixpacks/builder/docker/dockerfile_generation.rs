@@ -12,6 +12,7 @@ use anyhow::{Context, Ok, Result};
 use indoc::formatdoc;
 use path_slash::PathBufExt;
 use std::{
+    fmt::format,
     fs::{self, File},
     io::Write,
     path::{Path, PathBuf},
@@ -124,7 +125,7 @@ impl DockerfileGenerator for BuildPlan {
             let rel_assets_slash_path = rel_assets_path
                 .to_slash()
                 .context("Failed to convert nix file path to slash path.")?;
-            format!("COPY {} {}", rel_assets_slash_path, app::ASSETS_DIR)
+            format!("COPY --link {} {}", rel_assets_slash_path, app::ASSETS_DIR)
         };
 
         let dockerfile_phases = plan
@@ -156,6 +157,7 @@ impl DockerfileGenerator for BuildPlan {
         let base_image = plan.build_image.clone();
 
         let dockerfile = formatdoc! {"
+            # syntax=docker/dockerfile:1.4
             FROM {base_image}
             WORKDIR {APP_DIR}
             {assets_copy_cmd}
@@ -242,7 +244,7 @@ impl DockerfileGenerator for StartPhase {
                   # start
                   FROM {run_image}
                   WORKDIR {APP_DIR}
-                  COPY --from=0 /etc/ssl/certs /etc/ssl/certs
+                  COPY --link --from=0 /etc/ssl/certs /etc/ssl/certs
                   RUN true
                   {copy_cmd}
                   {start_cmd}
@@ -301,8 +303,15 @@ impl DockerfileGenerator for Phase {
             let nix_file_path = nix_file
                 .to_slash()
                 .context("Failed to convert nix file path to slash path.")?;
+
+            let substituters = if let Some(proxy) = &options.nix_proxy {
+                format!("--substituters {}", proxy)
+            } else {
+                "".to_string()
+            };
+
             format!(
-                "COPY {nix_file_path} {nix_file_path}\nRUN nix-env -if {nix_file_path}",
+                "COPY --link {nix_file_path} {nix_file_path}\nRUN nix-env -if {nix_file_path} {substituters}",
                 nix_file_path = nix_file_path
             )
         } else {

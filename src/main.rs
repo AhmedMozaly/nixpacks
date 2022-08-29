@@ -82,6 +82,14 @@ fn main() -> Result<()> {
                         .takes_value(true),
                 )
                 .arg(
+                    Arg::new("nix-proxy")
+                        .long("nix-proxy")
+                        .help(
+                            "URL of nix cache proxy, Defaults to none",
+                        )
+                        .takes_value(true),
+                )
+                .arg(
                     Arg::new("no-cache")
                         .long("no-cache")
                         .help("Disable building with the cache"),
@@ -200,6 +208,7 @@ fn main() -> Result<()> {
             let name = matches.value_of("name").map(ToString::to_string);
             let out_dir = matches.value_of("out").map(ToString::to_string);
             let mut cache_key = matches.value_of("cache-key").map(ToString::to_string);
+            let nix_proxy = matches.value_of("nix-proxy").map(ToString::to_string);
             let no_cache = matches.is_present("no-cache");
 
             // Default to absolute `path` of the source that is being built as the cache-key if not disabled
@@ -233,6 +242,7 @@ fn main() -> Result<()> {
                 no_cache,
                 platform,
                 print_dockerfile,
+                nix_proxy,
             };
 
             create_docker_image(path, envs, plan_options, build_options)?;

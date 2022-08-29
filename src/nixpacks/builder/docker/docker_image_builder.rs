@@ -9,6 +9,7 @@ use std::{
     fmt::format,
     fs::{self, File},
     process::Command,
+    time::{Duration, Instant},
 };
 use tempdir::TempDir;
 use uuid::Uuid;
@@ -55,8 +56,12 @@ impl ImageBuilder for DockerImageBuilder {
         if self.options.out_dir.is_none() {
             let mut docker_build_cmd = self.get_docker_build_cmd(plan, name.as_str(), &output)?;
 
+            let start_time = Instant::now();
             // Execute docker build
             let build_result = docker_build_cmd.spawn()?.wait().context("Building image")?;
+            let duration = start_time.elapsed();
+            println!("Total time taken: {} ms", duration.as_millis());
+
             if !build_result.success() {
                 bail!("Docker build failed")
             }
@@ -87,7 +92,8 @@ impl DockerImageBuilder {
         }
 
         let target_dir = "/build-dir";
-        let cache_dir = "/builder-files/buildkit-daemonless-cache2";
+        // let cache_dir = "/Users/ahmedmozaly/railway/builder-cache/buildkit";
+        let cache_dir = "/builder_files/buildkit";
 
         docker_build_cmd
         .arg("run")
@@ -126,18 +132,19 @@ impl DockerImageBuilder {
         }
 
         let context_dir = &output.root.display().to_string();
-        let cache_dir = "/builder-files/kaniko-cache";
-        let gcloud_idr = "/root";
+        let cache_dir = "/Users/ahmedmozaly/railway/builder-cache/kaniko";
+        let gcloud_idr = "/Users/ahmedmozaly/.config/gcloud";
+        let container_build_dir = "/workspace";
 
         docker_build_cmd
             .arg("run")
             .arg("-v")
-            .arg(format!("{}/.config/gcloud:/root/.config/gcloud", gcloud_idr))
+            .arg(format!("{}:/root/.config/gcloud", gcloud_idr))
             .arg("-v")
             .arg(format!("{}:/workspace", context_dir))
             .arg("gcr.io/kaniko-project/executor:latest")
             .arg("--dockerfile")
-            .arg("/workspace/.nixpacks/Dockerfile")
+            .arg(format!("{}/.nixpacks/Dockerfile", container_build_dir))
             .arg("--destination")
             .arg(format!("gcr.io/railway-infra-staging/{}", name.to_string()))
             .arg("--cache=true")
@@ -145,7 +152,7 @@ impl DockerImageBuilder {
             .arg("--cache-copy-layers")
             .arg("--cache-run-layers")
             .arg("--context")
-            .arg(context_dir);
+            .arg(container_build_dir);
 
         Ok(docker_build_cmd)
     }
@@ -204,6 +211,7 @@ impl DockerImageBuilder {
         name: &str,
         output: &OutputDir,
     ) -> Result<Command> {
+        println!("output dir {}", &output.root.display().to_string());
         self.run_daemonless(plan, output, name)
     }
 

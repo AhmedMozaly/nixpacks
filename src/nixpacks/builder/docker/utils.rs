@@ -25,16 +25,16 @@ pub fn get_copy_command(files: &[String], app_dir: &str) -> String {
     if files.is_empty() {
         "".to_owned()
     } else {
-        format!("COPY {} {}", files.join(" "), app_dir)
+        format!("COPY --link {} {}", files.join(" "), app_dir)
     }
 }
 
 pub fn get_copy_from_command(from: &str, files: &[String], app_dir: &str) -> String {
     if files.is_empty() {
-        format!("COPY --from=0 {} {}", app_dir, app_dir)
+        format!("COPY --link --from=0 {} {}", app_dir, app_dir)
     } else {
         format!(
-            "COPY --from={} {} {}",
+            "COPY --link --from={} {} {}",
             from,
             files
                 .iter()
@@ -79,7 +79,7 @@ mod tests {
 
         assert_eq!("".to_owned(), get_copy_command(&[], app_dir));
         assert_eq!(
-            format!("COPY {} {}", files.join(" "), app_dir),
+            format!("COPY --link {} {}", files.join(" "), app_dir),
             get_copy_command(&files, app_dir)
         );
     }
@@ -91,11 +91,11 @@ mod tests {
         let app_dir = "app";
 
         assert_eq!(
-            format!("COPY --from=0 {} {}", app_dir, app_dir),
+            format!("COPY --link --from=0 {} {}", app_dir, app_dir),
             get_copy_from_command(from, &[], app_dir)
         );
         assert_eq!(
-            format!("COPY --from={} {} {}", from, files.join(" "), app_dir),
+            format!("COPY --link --from={} {} {}", from, files.join(" "), app_dir),
             get_copy_from_command(from, &files, app_dir)
         );
     }
