@@ -213,7 +213,7 @@ impl DockerImageBuilder {
         output: &OutputDir,
     ) -> Result<Command> {
         println!("output dir {}", &output.root.display().to_string());
-        self.run_daemonless(plan, output, name)
+        self.run_docker(plan, output, name)
     }
 
     fn write_app(&self, app_src: &str, output: &OutputDir) -> Result<()> {
