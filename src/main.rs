@@ -88,6 +88,18 @@ fn main() -> Result<()> {
                         .takes_value(true),
                 )
                 .arg(
+                    Arg::new("cache-from")
+                        .long("cache-from")
+                        .help("Cache from config")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::new("cache-to")
+                        .long("cache-to")
+                        .help("Cache to config")
+                        .takes_value(true),
+                )
+                .arg(
                     Arg::new("no-cache")
                         .long("no-cache")
                         .help("Disable building with the cache"),
@@ -207,6 +219,8 @@ fn main() -> Result<()> {
             let out_dir = matches.value_of("out").map(ToString::to_string);
             let mut cache_key = matches.value_of("cache-key").map(ToString::to_string);
             let nix_proxy = matches.value_of("nix-proxy").map(ToString::to_string);
+            let cache_from = matches.value_of("cache-from").map(ToString::to_string);
+            let cache_to = matches.value_of("cache-to").map(ToString::to_string);
             let no_cache = matches.is_present("no-cache");
 
             // Default to absolute `path` of the source that is being built as the cache-key if not disabled
@@ -241,6 +255,8 @@ fn main() -> Result<()> {
                 platform,
                 print_dockerfile,
                 nix_proxy,
+                cache_from,
+                cache_to,
             };
 
             create_docker_image(path, envs, plan_options, build_options)?;
