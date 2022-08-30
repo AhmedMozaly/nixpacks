@@ -1,4 +1,6 @@
-use super::{dockerfile_generation::DockerfileGenerator, DockerBuilderOptions, ImageBuilder};
+use super::{
+    dockerfile_generation::DockerfileGenerator, utils, DockerBuilderOptions, ImageBuilder,
+};
 use crate::nixpacks::{
     builder::docker::dockerfile_generation::OutputDir, environment::Environment, files,
     logger::Logger, plan::BuildPlan,
@@ -6,10 +8,9 @@ use crate::nixpacks::{
 use anyhow::{bail, Context, Ok, Result};
 
 use std::{
-    fs::{self, File},
+    fs::{self, remove_dir_all, File},
     process::Command,
 };
-use tempdir::TempDir;
 use uuid::Uuid;
 
 pub struct DockerImageBuilder {
@@ -23,10 +24,7 @@ impl ImageBuilder for DockerImageBuilder {
 
         let dir = match &self.options.out_dir {
             Some(dir) => dir.into(),
-            None => {
-                let tmp = TempDir::new("nixpacks").context("Creating a temp directory")?;
-                tmp.into_path()
-            }
+            None => utils::get_temp_path()?,
         };
         let name = self.options.name.clone().unwrap_or_else(|| id.to_string());
         let output = OutputDir::new(dir)?;
@@ -63,6 +61,8 @@ impl ImageBuilder for DockerImageBuilder {
             self.logger.log_section("Successfully Built!");
             println!("\nRun:");
             println!("  docker run -it {}", name);
+
+            fs::remove_dir_all(dir.clone());
         } else {
             println!("\nSaved output to:");
             println!("  {}", output.root.to_str().unwrap());

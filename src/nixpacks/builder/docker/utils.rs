@@ -1,5 +1,27 @@
 use super::cache::sanitize_cache_key;
 
+use chrono::Datelike;
+
+use anyhow::Result;
+use std::env;
+use std::fs;
+use std::path::PathBuf;
+use tempdir::TempDir;
+
+pub fn get_temp_path() -> Result<PathBuf> {
+    let now = chrono::Utc::now();
+    let tmp_root = &env::temp_dir().display().to_string();
+    let date_str = format!("{}/{}/{}", now.year(), now.month(), now.day());
+
+    let tmp_root_with_date = format!("{}{}", tmp_root, date_str);
+    fs::create_dir_all(tmp_root_with_date)?;
+
+    let prefix = format!("{}/nixpacks", &date_str);
+    let path = TempDir::new(&prefix)?.into_path();
+
+    Ok(path)
+}
+
 pub fn get_cache_mount(
     cache_key: &Option<String>,
     cache_directories: &Option<Vec<String>>,
@@ -49,6 +71,30 @@ pub fn get_copy_from_command(from: &str, files: &[String], app_dir: &str) -> Str
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_get_temp_path() -> Result<()> {
+        match get_temp_path() {
+            Ok(v) => {
+                let path = v.display().to_string();
+                let now = chrono::Utc::now();
+                let prefix = format!(
+                    "{}{}/{}/{}/nixpacks",
+                    &env::temp_dir().display().to_string(),
+                    now.year(),
+                    now.month(),
+                    now.day()
+                );
+
+                assert!(path.starts_with(&prefix));
+            }
+            Err(e) => {
+                assert!(false, "{}", e.to_string())
+            }
+        }
+
+        Ok(())
+    }
 
     #[test]
     fn test_get_cache_mount() {
