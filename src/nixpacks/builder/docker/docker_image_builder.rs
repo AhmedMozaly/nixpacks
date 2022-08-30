@@ -27,7 +27,7 @@ impl ImageBuilder for DockerImageBuilder {
             None => utils::get_temp_path()?,
         };
         let name = self.options.name.clone().unwrap_or_else(|| id.to_string());
-        let output = OutputDir::new(dir)?;
+        let output = OutputDir::new(dir.clone())?;
         output.ensure_output_exists()?;
 
         let dockerfile = plan
@@ -62,7 +62,7 @@ impl ImageBuilder for DockerImageBuilder {
             println!("\nRun:");
             println!("  docker run -it {}", name);
 
-            fs::remove_dir_all(dir.clone());
+            remove_dir_all(dir)?;
         } else {
             println!("\nSaved output to:");
             println!("  {}", output.root.to_str().unwrap());
