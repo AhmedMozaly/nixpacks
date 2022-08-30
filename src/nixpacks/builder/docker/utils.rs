@@ -13,8 +13,8 @@ pub fn get_temp_path() -> Result<PathBuf> {
     let tmp_root = &env::temp_dir().display().to_string();
     let date_str = format!("{}/{}/{}", now.year(), now.month(), now.day());
 
-    let tmp_root_with_date = format!("{}{}", tmp_root, date_str);
-    fs::create_dir_all(tmp_root_with_date)?;
+    // all parent is expected to be already created, otherwise temp dir creation will panic
+    fs::create_dir_all(format!("{}{}", tmp_root, date_str))?;
 
     let prefix = format!("{}/nixpacks", &date_str);
     let path = TempDir::new(&prefix)?.into_path();
