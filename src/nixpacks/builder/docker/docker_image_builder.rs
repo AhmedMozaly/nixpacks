@@ -195,7 +195,6 @@ impl DockerImageBuilder {
         }
 
         if let Some( v) = &self.options.cache_to {
-            docker_build_cmd.env("BUILDKIT_INLINE_CACHE", "1");
             docker_build_cmd.arg("--cache-to").arg(v);
         }
 
