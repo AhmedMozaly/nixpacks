@@ -12,6 +12,7 @@ pub struct DockerBuilderOptions {
     pub cache_key: Option<String>,
     pub no_cache: bool,
     pub platform: Vec<String>,
+    pub current_dir: bool,
     pub nix_proxy: Option<String>,
     pub cache_from: Option<String>,
     pub cache_to: Option<String>,

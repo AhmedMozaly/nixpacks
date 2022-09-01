@@ -6,9 +6,9 @@ use crate::nixpacks::{
 use anyhow::{bail, Context, Ok, Result};
 
 use std::{
-    fs::{self, File},
+    fs::{self, remove_dir_all, File},
     process::Command,
-    time::{Instant},
+    time::Instant,
 };
 use tempdir::TempDir;
 use uuid::Uuid;
@@ -18,19 +18,23 @@ pub struct DockerImageBuilder {
     options: DockerBuilderOptions,
 }
 
+fn get_output_dir(options: &DockerBuilderOptions) -> Result<OutputDir> {
+    if let Some(value) = &options.out_dir {
+        OutputDir::new(value.into(), false)
+    } else if options.current_dir {
+        Ok(OutputDir::default())
+    } else {
+        let tmp = TempDir::new("nixpacks").context("Creating a temp directory")?;
+        OutputDir::new(tmp.into_path(), true)
+    }
+}
+
 impl ImageBuilder for DockerImageBuilder {
     fn create_image(&self, app_src: &str, plan: &BuildPlan, env: &Environment) -> Result<()> {
         let id = Uuid::new_v4();
 
-        let dir = match &self.options.out_dir {
-            Some(dir) => dir.into(),
-            None => {
-                let tmp = TempDir::new("nixpacks").context("Creating a temp directory")?;
-                tmp.into_path()
-            }
-        };
+        let output = get_output_dir(&self.options)?;
         let name = self.options.name.clone().unwrap_or_else(|| id.to_string());
-        let output = OutputDir::new(dir)?;
         output.ensure_output_exists()?;
 
         let dockerfile = plan
@@ -68,8 +72,12 @@ impl ImageBuilder for DockerImageBuilder {
             self.logger.log_section("Successfully Built!");
             println!("\nRun:");
             println!("  docker run -it {}", name);
-            println!(   "docker tag {} gcr.io/railway-infra-staging/{}", name, name);
-            println!(   "docker push gcr.io/railway-infra-staging/{}", name);
+
+            if output.is_temp {
+                remove_dir_all(output.root)?;
+            }
+            println!("docker tag {} gcr.io/railway-infra-staging/{}", name, name);
+            println!("docker push gcr.io/railway-infra-staging/{}", name);
         } else {
             println!("\nSaved output to:");
             println!("  {}", output.root.to_str().unwrap());
@@ -190,11 +198,11 @@ impl DockerImageBuilder {
             docker_build_cmd.arg("--no-cache");
         }
 
-        if let Some( v) = &self.options.cache_from {
+        if let Some(v) = &self.options.cache_from {
             docker_build_cmd.arg("--cache-from").arg(v);
         }
 
-        if let Some( v) = &self.options.cache_to {
+        if let Some(v) = &self.options.cache_to {
             docker_build_cmd.arg("--cache-to").arg(v);
         }
 
@@ -230,7 +238,11 @@ impl DockerImageBuilder {
     }
 
     fn write_app(&self, app_src: &str, output: &OutputDir) -> Result<()> {
-        files::recursive_copy_dir(app_src, &output.root)
+        if output.is_temp {
+            files::recursive_copy_dir(app_src, &output.root)
+        } else {
+            Ok(())
+        }
     }
 
     fn write_dockerfile(&self, dockerfile: String, output: &OutputDir) -> Result<()> {
