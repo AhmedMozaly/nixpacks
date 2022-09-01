@@ -68,8 +68,8 @@ impl ImageBuilder for DockerImageBuilder {
             self.logger.log_section("Successfully Built!");
             println!("\nRun:");
             println!("  docker run -it {}", name);
-            println!(   "docker tag {} gcr.io/railway-infra-staging/{}", name, name)
-            println!(   "docker push gcr.io/railway-infra-staging/{}", name)
+            println!(   "docker tag {} gcr.io/railway-infra-staging/{}", name, name);
+            println!(   "docker push gcr.io/railway-infra-staging/{}", name);
         } else {
             println!("\nSaved output to:");
             println!("  {}", output.root.to_str().unwrap());
