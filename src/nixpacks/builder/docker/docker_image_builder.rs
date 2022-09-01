@@ -179,6 +179,7 @@ impl DockerImageBuilder {
         println!("output dir {}", &output.root.display().to_string());
 
         docker_build_cmd
+            .arg("buildx")
             .arg("build")
             .arg(&output.root)
             .arg("-f")
@@ -223,6 +224,8 @@ impl DockerImageBuilder {
         for l in self.options.platform.clone() {
             docker_build_cmd.arg("--platform").arg(l);
         }
+
+        println!("ahmed is {:?}", docker_build_cmd);
 
         Ok(docker_build_cmd)
     }
