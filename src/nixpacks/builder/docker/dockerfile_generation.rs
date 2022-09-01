@@ -12,7 +12,6 @@ use anyhow::{Context, Ok, Result};
 use indoc::formatdoc;
 use path_slash::PathBufExt;
 use std::{
-    fmt::format,
     fs::{self, File},
     io::Write,
     path::{Path, PathBuf},

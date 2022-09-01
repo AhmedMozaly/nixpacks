@@ -1,6 +1,7 @@
 use super::ImageBuilder;
 
 #[derive(Clone, Default, Debug)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct DockerBuilderOptions {
     pub name: Option<String>,
     pub out_dir: Option<String>,
@@ -14,6 +15,7 @@ pub struct DockerBuilderOptions {
     pub nix_proxy: Option<String>,
     pub cache_from: Option<String>,
     pub cache_to: Option<String>,
+    pub inline_caching: bool,
 }
 
 mod cache;

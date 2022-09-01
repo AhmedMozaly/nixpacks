@@ -6,10 +6,9 @@ use crate::nixpacks::{
 use anyhow::{bail, Context, Ok, Result};
 
 use std::{
-    fmt::format,
     fs::{self, File},
     process::Command,
-    time::{Duration, Instant},
+    time::{Instant},
 };
 use tempdir::TempDir;
 use uuid::Uuid;
@@ -69,6 +68,8 @@ impl ImageBuilder for DockerImageBuilder {
             self.logger.log_section("Successfully Built!");
             println!("\nRun:");
             println!("  docker run -it {}", name);
+            println!(   "docker tag {} gcr.io/railway-infra-staging/{}", name, name)
+            println!(   "docker push gcr.io/railway-infra-staging/{}", name)
         } else {
             println!("\nSaved output to:");
             println!("  {}", output.root.to_str().unwrap());
@@ -83,7 +84,7 @@ impl DockerImageBuilder {
         DockerImageBuilder { logger, options }
     }
 
-    fn run_daemonless(&self, plan: &BuildPlan, output: &OutputDir, name: &str) -> Result<Command> {
+    fn run_daemonless(&self, _plan: &BuildPlan, output: &OutputDir, name: &str) -> Result<Command> {
         println!("Building with Buildkit in Daemonless mode");
         let mut docker_build_cmd = Command::new("docker");
 
@@ -123,7 +124,7 @@ impl DockerImageBuilder {
         Ok(docker_build_cmd)
     }
 
-    fn run_kaniko(&self, plan: &BuildPlan, output: &OutputDir, name: &str) -> Result<Command> {
+    fn run_kaniko(&self, _plan: &BuildPlan, output: &OutputDir, name: &str) -> Result<Command> {
         println!("Building with  Kaniko");
         let mut docker_build_cmd = Command::new("docker");
 
@@ -179,6 +180,10 @@ impl DockerImageBuilder {
 
         if self.options.quiet {
             docker_build_cmd.arg("--quiet");
+        }
+
+        if self.options.inline_caching {
+            docker_build_cmd.env("BUILDKIT_INLINE_CACHE", "1");
         }
 
         if self.options.no_cache {
