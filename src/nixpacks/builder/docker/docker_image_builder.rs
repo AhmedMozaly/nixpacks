@@ -181,6 +181,7 @@ impl DockerImageBuilder {
         docker_build_cmd
             .arg("buildx")
             .arg("build")
+            .arg("--load")
             .arg(&output.root)
             .arg("-f")
             .arg(&output.get_absolute_path("Dockerfile"))
