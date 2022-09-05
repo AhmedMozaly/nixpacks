@@ -88,15 +88,15 @@ fn main() -> Result<()> {
                         .takes_value(true),
                 )
                 .arg(
-                    Arg::new("cache-from")
-                        .long("cache-from")
-                        .help("Cache from config")
+                    Arg::new("import-cache")
+                        .long("import-cache")
+                        .help("import cache")
                         .takes_value(true),
                 )
                 .arg(
-                    Arg::new("cache-to")
-                        .long("cache-to")
-                        .help("Cache to config")
+                    Arg::new("export-cache")
+                        .long("export-cache")
+                        .help("export cache")
                         .takes_value(true),
                 )
                 .arg(
