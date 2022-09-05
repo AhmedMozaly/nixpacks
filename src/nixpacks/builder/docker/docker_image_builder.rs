@@ -76,8 +76,7 @@ impl ImageBuilder for DockerImageBuilder {
             if output.is_temp {
                 remove_dir_all(output.root)?;
             }
-            println!("docker tag {} gcr.io/railway-infra-staging/{}", name, name);
-            println!("docker push gcr.io/railway-infra-staging/{}", name);
+            println!("docker tag {} us-west1-docker.pkg.dev/railway-infra-staging/{} && docker push us-west1-docker.pkg.dev/railway-infra-staging/{}", name, name, name);
         } else {
             println!("\nSaved output to:");
             println!("  {}", output.root.to_str().unwrap());
