@@ -231,8 +231,8 @@ fn main() -> Result<()> {
             let current_dir = matches.is_present("current-dir");
             let mut cache_key = matches.value_of("cache-key").map(ToString::to_string);
             let nix_proxy = matches.value_of("nix-proxy").map(ToString::to_string);
-            let cache_from = matches.value_of("cache-from").map(ToString::to_string);
-            let cache_to = matches.value_of("cache-to").map(ToString::to_string);
+            let import_cache = matches.value_of("import-cache").map(ToString::to_string);
+            let export_cache = matches.value_of("export-cache").map(ToString::to_string);
             let no_cache = matches.is_present("no-cache");
             let inline_caching = matches.is_present("inline-caching");
 
@@ -268,8 +268,8 @@ fn main() -> Result<()> {
                 platform,
                 print_dockerfile,
                 nix_proxy,
-                cache_from,
-                cache_to,
+                import_cache,
+                export_cache,
                 inline_caching,
                 current_dir,
             };

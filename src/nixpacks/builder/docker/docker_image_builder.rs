@@ -179,7 +179,6 @@ impl DockerImageBuilder {
         println!("output dir {}", &output.root.display().to_string());
 
         docker_build_cmd
-            .arg("buildx")
             .arg("build")
             .arg(&output.root)
             .arg("-f")
@@ -199,12 +198,12 @@ impl DockerImageBuilder {
             docker_build_cmd.arg("--no-cache");
         }
 
-        if let Some(v) = &self.options.cache_from {
-            docker_build_cmd.arg("--cache-from").arg(v);
+        if let Some(v) = &self.options.import_cache {
+            docker_build_cmd.arg("--import-cache").arg(v);
         }
 
-        if let Some(v) = &self.options.cache_to {
-            docker_build_cmd.arg("--cache-to").arg(v);
+        if let Some(v) = &self.options.export_cache {
+            docker_build_cmd.arg("--export-cache").arg(v);
         }
 
         // Add build environment variables
