@@ -194,9 +194,9 @@ impl DockerImageBuilder {
 
         if self.options.inline_caching {
             docker_build_cmd.env("BUILDKIT_INLINE_CACHE", "1");
-            docker_build_cmd
-                .arg("--build-arg")
-                .arg("BUILDKIT_INLINE_CACHE=1");
+            // docker_build_cmd
+            //     .arg("--build-arg")
+            //     .arg("BUILDKIT_INLINE_CACHE=1");
             println!("Inline caching enabled");
         }
 
