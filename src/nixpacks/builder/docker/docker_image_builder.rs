@@ -1,7 +1,10 @@
 use super::{dockerfile_generation::DockerfileGenerator, DockerBuilderOptions, ImageBuilder};
 use crate::nixpacks::{
-    builder::docker::dockerfile_generation::OutputDir, environment::Environment, files,
-    logger::Logger, plan::BuildPlan,
+    builder::docker::dockerfile_generation::OutputDir,
+    environment::{Environment, EnvironmentVariables},
+    files,
+    logger::Logger,
+    plan::BuildPlan,
 };
 use anyhow::{bail, Context, Ok, Result};
 
@@ -191,6 +194,9 @@ impl DockerImageBuilder {
 
         if self.options.inline_caching {
             docker_build_cmd.env("BUILDKIT_INLINE_CACHE", "1");
+            docker_build_cmd
+                .arg("--build-arg")
+                .arg("BUILDKIT_INLINE_CACHE=1");
             println!("Inline caching enabled");
         }
 
