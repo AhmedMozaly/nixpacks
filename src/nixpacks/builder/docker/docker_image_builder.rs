@@ -182,6 +182,7 @@ impl DockerImageBuilder {
             .arg("build")
             .arg(&output.root)
             .arg("-f")
+            .arg("--load")
             .arg(&output.get_absolute_path("Dockerfile"))
             .arg("-t")
             .arg(name);
