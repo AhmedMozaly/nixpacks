@@ -14,8 +14,8 @@ pub struct DockerBuilderOptions {
     pub platform: Vec<String>,
     pub current_dir: bool,
     pub nix_proxy: Option<String>,
-    pub import_cache: Option<String>,
-    pub export_cache: Option<String>,
+    pub cache_from: Option<String>,
+    pub cache_to: Option<String>,
     pub inline_caching: bool,
 }
 
