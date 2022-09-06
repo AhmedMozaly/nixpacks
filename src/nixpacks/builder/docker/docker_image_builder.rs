@@ -180,9 +180,9 @@ impl DockerImageBuilder {
         docker_build_cmd
             .arg("buildx")
             .arg("build")
+            .arg("--load")
             .arg(&output.root)
             .arg("-f")
-            .arg("--load")
             .arg(&output.get_absolute_path("Dockerfile"))
             .arg("-t")
             .arg(name);
