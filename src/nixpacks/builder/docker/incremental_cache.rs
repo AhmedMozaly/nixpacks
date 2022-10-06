@@ -107,10 +107,10 @@ impl IncrementalCache {
 
     pub fn get_copy_to_image_command(
         cache_directories: &Option<Vec<String>>,
-        incremental_cahge_image: &str,
+        incremental_cache_image: &str,
     ) -> Result<Vec<String>> {
         let dirs = &cache_directories.clone().unwrap_or_default();
-        if dirs.is_empty() || !IncrementalCache::is_image_exists(incremental_cahge_image)? {
+        if dirs.is_empty() || !IncrementalCache::is_image_exists(incremental_cache_image)? {
             return Ok(vec![]);
         }
 
@@ -128,7 +128,7 @@ impl IncrementalCache {
 
                 vec![format!(
                     "COPY --from={} {} {}",
-                    incremental_cahge_image, target_cache_dir_optional, target_cache_dir
+                    incremental_cache_image, target_cache_dir_optional, target_cache_dir
                 )]
             })
             .collect::<Vec<String>>();
