@@ -108,9 +108,10 @@ impl IncrementalCache {
     pub fn get_copy_to_image_command(
         cache_directories: &Option<Vec<String>>,
         incremental_cache_image: &str,
+        incremental_cache_image_validator: fn(&str) -> Result<bool>,
     ) -> Result<Vec<String>> {
         let dirs = &cache_directories.clone().unwrap_or_default();
-        if dirs.is_empty() || !IncrementalCache::is_image_exists(incremental_cache_image)? {
+        if dirs.is_empty() || !incremental_cache_image_validator(incremental_cache_image)? {
             return Ok(vec![]);
         }
 
@@ -154,7 +155,7 @@ impl IncrementalCache {
                 vec![
                     format!("if [ -d \"{sanitized_dir}\" ]; then tar -cf {compressed_file_name} {sanitized_dir}; fi;"),
                     format!(
-                        "if [ -d \"{sanitized_dir}\" ] ; then curl -v -T {} {} --header \"t:{}\" --retry 3 --retry-all-errors; fi;",
+                        "if [ -d \"{sanitized_dir}\" ]; then curl -v -T {} {} --header \"t:{}\" --retry 3 --retry-all-errors; fi;",
                         compressed_file_name, server_config.upload_url, server_config.access_token,
                     ),
                     format!("if [ -d \"{sanitized_dir}\" ]; then rm -rf {}; fi", sanitized_dir),
@@ -162,4 +163,42 @@ impl IncrementalCache {
             })
             .collect::<Vec<String>>()
     }
+}
+
+#[test]
+fn test_get_copy_from_image_command() {
+    let cmds = IncrementalCache::get_copy_from_image_command(
+        &Some(vec!["./parent_dir/child_dir".to_string()]),
+        Some(FileServerConfig {
+            listen_to_ip: "0.0.0.0".to_string(),
+            port: 1234,
+            access_token: "test_access_token".to_string(),
+            upload_url: "http://test.com/upload".to_string(),
+            files_dir: PathBuf::from("./source_dir".to_string()),
+        }),
+    );
+    println!("result is {:?}", cmds);
+
+    assert_eq!(cmds.len(), 3);
+    assert_eq!(cmds[0], "if [ -d \"./parent_dir/child_dir\" ]; then tar -cf .%2fparent_dir%2fchild_dir.tar ./parent_dir/child_dir; fi;".to_string());
+    assert_eq!(cmds[1], "if [ -d \"./parent_dir/child_dir\" ]; then curl -v -T .%2fparent_dir%2fchild_dir.tar http://test.com/upload --header \"t:test_access_token\" --retry 3 --retry-all-errors; fi;".to_string());
+    assert_eq!(
+        cmds[2],
+        "if [ -d \"./parent_dir/child_dir\" ]; then rm -rf ./parent_dir/child_dir; fi".to_string()
+    );
+}
+
+#[test]
+fn test_get_copy_to_image_command() -> Result<()> {
+    let cmds = IncrementalCache::get_copy_to_image_command(
+        &Some(vec!["./parent_dir/child_dir".to_string()]),
+        "docker.io/library/node/test-image",
+        |_| Ok(true),
+    )?;
+    println!("result is {:?}", cmds);
+
+    assert_eq!(cmds.len(), 1);
+    assert_eq!(cmds[0], "COPY --from=docker.io/library/node/test-image .?/parent_dir?/child_dir? ./parent_dir/child_dir".to_string());
+
+    Ok(())
 }

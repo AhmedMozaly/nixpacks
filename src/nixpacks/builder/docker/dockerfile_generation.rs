@@ -371,6 +371,7 @@ impl DockerfileGenerator for Phase {
             let cache_copy_in_command = IncrementalCache::get_copy_to_image_command(
                 &phase.cache_directories,
                 &options.incremental_cache_image.clone().unwrap(),
+                IncrementalCache::is_image_exists,
             )?
             .join("\n");
 
