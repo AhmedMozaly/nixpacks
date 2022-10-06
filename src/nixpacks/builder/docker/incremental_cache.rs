@@ -177,7 +177,6 @@ fn test_get_copy_from_image_command() {
             files_dir: PathBuf::from("./source_dir".to_string()),
         }),
     );
-    println!("result is {:?}", cmds);
 
     assert_eq!(cmds.len(), 3);
     assert_eq!(cmds[0], "if [ -d \"./parent_dir/child_dir\" ]; then tar -cf .%2fparent_dir%2fchild_dir.tar ./parent_dir/child_dir; fi;".to_string());
@@ -192,13 +191,12 @@ fn test_get_copy_from_image_command() {
 fn test_get_copy_to_image_command() -> Result<()> {
     let cmds = IncrementalCache::get_copy_to_image_command(
         &Some(vec!["./parent_dir/child_dir".to_string()]),
-        "docker.io/library/node/test-image",
+        "docker.io/library/test-image",
         |_| Ok(true),
     )?;
-    println!("result is {:?}", cmds);
 
     assert_eq!(cmds.len(), 1);
-    assert_eq!(cmds[0], "COPY --from=docker.io/library/node/test-image .?/parent_dir?/child_dir? ./parent_dir/child_dir".to_string());
+    assert_eq!(cmds[0], "COPY --from=docker.io/library/test-image .?/parent_dir?/child_dir? ./parent_dir/child_dir".to_string());
 
     Ok(())
 }
