@@ -108,10 +108,9 @@ impl IncrementalCache {
     pub fn get_copy_to_image_command(
         cache_directories: &Option<Vec<String>>,
         incremental_cache_image: &str,
-        incremental_cache_image_validator: fn(&str) -> Result<bool>,
     ) -> Result<Vec<String>> {
         let dirs = &cache_directories.clone().unwrap_or_default();
-        if dirs.is_empty() || !incremental_cache_image_validator(incremental_cache_image)? {
+        if dirs.is_empty() {
             return Ok(vec![]);
         }
 
@@ -192,11 +191,14 @@ fn test_get_copy_to_image_command() -> Result<()> {
     let cmds = IncrementalCache::get_copy_to_image_command(
         &Some(vec!["./parent_dir/child_dir".to_string()]),
         "docker.io/library/test-image",
-        |_| Ok(true),
     )?;
 
     assert_eq!(cmds.len(), 1);
-    assert_eq!(cmds[0], "COPY --from=docker.io/library/test-image .?/parent_dir?/child_dir? ./parent_dir/child_dir".to_string());
+    assert_eq!(
+        cmds[0],
+        "COPY --from=docker.io/library/test-image .?/parent_dir?/child_dir? ./parent_dir/child_dir"
+            .to_string()
+    );
 
     Ok(())
 }
